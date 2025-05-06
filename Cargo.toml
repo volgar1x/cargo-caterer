@@ -1,6 +1,6 @@
 [package]
 name = "cargo-caterer"
-version = "0.1.71"
+version = "0.1.72"
 authors = [
   "Luca Palmieri <lpalmieri@truelayer.com>",
   "Antoine Chauvin <antoine@aqora.io>",
