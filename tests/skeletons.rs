@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use assert_fs::prelude::*;
 use assert_fs::TempDir;
-use chef::Skeleton;
+use caterer::Skeleton;
 use expect_test::{expect, Expect};
 use predicates::prelude::*;
 

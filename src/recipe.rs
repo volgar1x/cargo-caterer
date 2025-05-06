@@ -23,6 +23,7 @@ pub enum CommandArg {
     Clippy,
     Zigbuild,
     NoBuild,
+    Fetch,
 }
 
 pub struct CookArgs {
@@ -124,6 +125,7 @@ fn build_dependencies(args: &CookArgs) {
         CommandArg::Build => command.arg("build"),
         CommandArg::Check => command.arg("check"),
         CommandArg::Clippy => command.arg("clippy"),
+        CommandArg::Fetch => command.arg("fetch"),
         CommandArg::Zigbuild => command.arg("zigbuild"),
         CommandArg::NoBuild => return,
     };

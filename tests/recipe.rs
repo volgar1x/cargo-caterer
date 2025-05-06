@@ -1,6 +1,6 @@
 use assert_fs::prelude::{FileTouch, FileWriteStr, PathChild, PathCreateDir};
 use assert_fs::TempDir;
-use chef::Recipe;
+use caterer::Recipe;
 
 fn quick_recipe(content: &str) -> Recipe {
     let recipe_directory = TempDir::new().unwrap();

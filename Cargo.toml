@@ -1,22 +1,25 @@
 [package]
-name = "cargo-chef"
+name = "cargo-caterer"
 version = "0.1.71"
-authors = ["Luca Palmieri <lpalmieri@truelayer.com>"]
+authors = [
+  "Luca Palmieri <lpalmieri@truelayer.com>",
+  "Antoine Chauvin <antoine@aqora.io>",
+]
 edition = "2018"
 description = "A cargo sub-command to build project dependencies for optimal Docker layer caching."
 keywords = ["cargo", "docker", "caching", "dependencies"]
 categories = ["development-tools::cargo-plugins", "command-line-utilities"]
-repository = "https://github.com/LukeMathWalker/cargo-chef"
-documentation = "https://docs.rs/cargo-chef"
+repository = "https://github.com/volgar1x/cargo-caterer"
+documentation = "https://docs.rs/cargo-caterer"
 license = "Apache-2.0 OR MIT"
 exclude = ["tests"]
 
 [[bin]]
-name = "cargo-chef"
+name = "cargo-caterer"
 path = "src/main.rs"
 
 [lib]
-name = "chef"
+name = "caterer"
 path = "src/lib.rs"
 
 [dependencies]

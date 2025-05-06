@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context};
-use chef::{
+use caterer::{
     AllFeatures, CommandArg, CookArgs, DefaultFeatures, OptimisationProfile, Recipe, TargetArgs,
 };
 use clap::crate_version;
@@ -23,9 +23,9 @@ pub struct Cli {
 
 #[derive(Parser)]
 pub enum CargoInvocation {
-    // All `cargo` subcommands receive their name (e.g. `chef` as the first command).
+    // All `cargo` subcommands receive their name (e.g. `caterer` as the first command).
     // See https://github.com/rust-lang/rustfmt/pull/3569
-    Chef {
+    Caterer {
         #[command(subcommand)]
         command: Command,
     },
@@ -40,10 +40,10 @@ pub enum Command {
     /// Analyze the current project to determine the minimum subset of files (Cargo.lock and
     /// Cargo.toml manifests) required to build it and cache dependencies.
     ///
-    /// `cargo chef prepare` emits a recipe file that can be later used via
-    /// `cargo chef cook --recipe <recipe-path>.json`.
+    /// `cargo caterer prepare` emits a recipe file that can be later used via
+    /// `cargo caterer cook --recipe <recipe-path>.json`.
     Prepare(Prepare),
-    /// Re-hydrate the minimum project skeleton identified by `cargo chef prepare` and build
+    /// Re-hydrate the minimum project skeleton identified by `cargo caterer prepare` and build
     /// it to cache dependencies.
     Cook(Cook),
 }
@@ -56,7 +56,7 @@ pub struct Prepare {
     #[arg(long, default_value = "recipe.json")]
     recipe_path: PathBuf,
 
-    /// When --bin is specified, `cargo-chef` will ignore all members of the workspace
+    /// When --bin is specified, `cargo-caterer` will ignore all members of the workspace
     /// that are not necessary to successfully compile the specific binary.
     #[arg(long)]
     bin: Option<String>,
@@ -81,6 +81,9 @@ pub struct Cook {
     /// Run `cargo clippy` instead of `cargo build`. Primarily useful for speeding up your CI pipeline. Requires clippy to be installed.
     #[arg(long)]
     clippy: bool,
+    /// Run `cargo fetch` instead of `cargo build`. Primarily useful for offline local environments in Docker containers.
+    #[arg(long)]
+    fetch: bool,
     /// Build for the target triple. The flag can be passed multiple times to cook for multiple targets.
     #[arg(long)]
     target: Option<Vec<String>>,
@@ -150,7 +153,7 @@ pub struct Cook {
     #[arg(long)]
     zigbuild: bool,
     /// Modify the current workspace to maximise cache reuse, but don't invoke `cargo build`.
-    /// This option exist to leverage `cargo-chef` when trying to cache dependencies in Rust
+    /// This option exist to leverage `cargo-caterer` when trying to cache dependencies in Rust
     /// projects that rely on a custom build system (i.e. not `cargo`).
     #[clap(long)]
     no_build: bool,
@@ -162,7 +165,7 @@ fn _main() -> Result<(), anyhow::Error> {
     let cli = Cli::parse();
     // "Unwrapping" the actual command.
     let command = match cli.command {
-        CargoInvocation::Chef { command } => command,
+        CargoInvocation::Caterer { command } => command,
     };
 
     match command {
@@ -172,6 +175,7 @@ fn _main() -> Result<(), anyhow::Error> {
             release,
             check,
             clippy,
+            fetch,
             target,
             no_default_features,
             all_features,
@@ -199,7 +203,7 @@ fn _main() -> Result<(), anyhow::Error> {
             if std::io::stdout().is_terminal() {
                 eprintln!("WARNING stdout appears to be a terminal.");
                 eprintln!(
-                    "cargo-chef is not meant to be run in an interactive environment \
+                    "cargo-caterer is not meant to be run in an interactive environment \
                 and will overwrite some existing files (namely any `lib.rs`, `main.rs` and \
                 `Cargo.toml` it finds)."
                 );
@@ -241,13 +245,14 @@ fn _main() -> Result<(), anyhow::Error> {
                 (false, Some(custom_profile)) => OptimisationProfile::Other(custom_profile),
                 (true, Some(_)) => Err(anyhow!("You specified both --release and --profile arguments. Please remove one of them, or both"))?
             };
-            let command = match (check, clippy, zigbuild, no_build) {
-                (true, false, false, false) => CommandArg::Check,
-                (false, true, false, false) => CommandArg::Clippy,
-                (false, false, true, false) => CommandArg::Zigbuild,
-                (false, false, false, true) => CommandArg::NoBuild,
-                (false, false, false, false) => CommandArg::Build,
-                _ => Err(anyhow!("Only one (or none) of the  `clippy`, `check`, `zigbuild`, and `no-build` arguments are allowed. Please remove some of them, or all"))?,
+            let command = match (check, clippy, zigbuild, no_build, fetch) {
+                (true, false, false, false, false) => CommandArg::Check,
+                (false, true, false, false, false) => CommandArg::Clippy,
+                (false, false, true, false, false) => CommandArg::Zigbuild,
+                (false, false, false, true, false) => CommandArg::NoBuild,
+                (false, false, false, false, true) => CommandArg::Fetch,
+                (false, false, false, false, false) => CommandArg::Build,
+                _ => Err(anyhow!("Only one (or none) of the  `clippy`, `check`, `fetch`, `zigbuild`, and `no-build` arguments are allowed. Please remove some of them, or all"))?,
             };
 
             let default_features = if no_default_features {
